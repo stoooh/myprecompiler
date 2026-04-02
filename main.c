@@ -4,7 +4,7 @@
 //includeremo funcs solo al momento della compliazione con gcc
 
 
-int main(int args, char *argv[]){  //args è il numero di argomenti, e argv l'array
+int main(int argc, char *argv[]){  //args è il numero di argomenti, e argv l'array
 
     Parametri *par; 
     Variabile *var;
@@ -13,10 +13,10 @@ int main(int args, char *argv[]){  //args è il numero di argomenti, e argv l'ar
 
 //partiamo gestendo prima l'input dell'utente da terminale (-i, -o, -v)
 
-    par = parsing_parametri(args, argv); 
+    par = parsing_parameters(argc, argv); 
 
     //caso base
-    if(par == NULL || par->file_input == NULL){ //la freccia serve per farci al puntatore
+    if(par == NULL || par->file_input == NULL){ //la freccia è un puntatore
         fprintf(stderr, "Errore: parametro -i obbligatorio!\n"); //stampa l'errore su schermo
         fprintf(stderr, "Uso appropriato: %s -i <file_input> [-o <file_output>] [-v]\n", argv[0]); //stampa l'uso corretto del programma
         return 1; //codice errore
@@ -31,7 +31,7 @@ int main(int args, char *argv[]){  //args è il numero di argomenti, e argv l'ar
 
     //lettura file C
 
-    var = leggi_file(par->file_input, &num_variabili, &stats); //legge il file
+    var = read_file(par->file_input, &num_variabili, &stats); //legge il file
 
     //caso base
     if(var == NULL){

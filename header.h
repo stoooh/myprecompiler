@@ -11,7 +11,7 @@ Il programma prevede tre parametri di input
 */
 
 #ifndef HEADER_H //#ifndef = "Se HEADER_H non è stato definito prima"
-#define HEADER_H //#define = "Allora definiscilo adesso"#include <stdio.h>
+#define HEADER_H //#define = "Allora definiscilo adesso"
 #include <stdlib.h>  //per funzioni di allocazione dinamica, gestione file, ecc.
 #include <string.h> //per funzioni di manipolazione stringhe, come strcmp, strcpy, ecc.
 #include <stdio.h> //per funzioni di input/output, come printf, fprintf, ecc.
@@ -52,11 +52,45 @@ typedef struct {
 } Statistiche;
 
 
+//-------------------------------------------//
+
+
+// Enum per rappresentare i tipi di dato validi
+typedef enum {
+    TIPO_INT,
+    TIPO_FLOAT,
+    TIPO_CHAR,
+    TIPO_DOUBLE,
+    TIPO_STRING,
+    TIPO_BOOL,
+    TIPO_UNKNOWN
+} Tipo_dato;
+
+//per rappresentare una lista di tipi validi, usiamo una linked list
+typedef struct NodoTipo {
+    char *tipo;              // Il tipo memorizzato
+    struct NodoTipo *next;   // Punta al PROSSIMO nodo
+} NodoTipo;
+
+typedef struct {
+    NodoTipo *head;    // Punta al primo nodo
+    int num_tipi;      // Conta quanti tipi 
+} ListaTipi;
+
+
+//gestione della lista di tipi validi
+ListaTipi* crea_lista_tipi();           // Crea una lista vuota
+void aggiungi_tipo(ListaTipi *lista, char *tipo);  // Aggiunge un tipo
+int tipo_esiste(ListaTipi *lista, char *tipo);     // Controlla se un tipo esiste già (flag 1 o 0)
+void libera_lista_tipi(ListaTipi *lista);          // Libera la memoria
+
+
+//--------------------------------------------//
 
 // 1. Parsing dei parametri da linea di comando (-i, -o, -v)
 // Ritorna una struct Parametri riempita con i valori passati
 //argv legge gli argomenti passati da terminale (array di stringhe)
-Parametri* parsing_parametri(int argc, char *argv[]);
+Parametri* parsing_parameters(int argc, char *argv[]);
 
 // 2. Validazione del nome di una variabile
 // Ritorna 1 se valido, 0 se non valido
@@ -69,7 +103,7 @@ int is_valid_type(char *tipo);
 // 4. Lettura e analisi del file di input
 // Carica tutte le variabili trovate in un array
 // Ritorna l'array di Variabile e il numero totale in *num_vars
-Variabile* leggi_file(char *filename, int *num_vars, Statistiche *stats);
+Variabile* read_file(char *filename, int *num_vars, Statistiche *stats);
 
 // 5. Calcolo delle statistiche finali
 // Aggiorna la struct Statistiche con i risultati
