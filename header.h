@@ -66,12 +66,15 @@ typedef enum {
     TIPO_UNKNOWN
 } Tipo_dato;
 
-//per rappresentare una lista di tipi validi, usiamo una linked list
+//per rappresentare una lista di tipi validi, usiamo una linked list che sfrutta l'allocazione dinamica
+
+//creo qui una losta con nodi e puntatori (nodo che prende il valore della stringa)
 typedef struct NodoTipo {
     char *tipo;              // Il tipo memorizzato
     struct NodoTipo *next;   // Punta al PROSSIMO nodo
 } NodoTipo;
 
+//creo qui la testa della lista e un contatore
 typedef struct {
     NodoTipo *head;    // Punta al primo nodo
     int num_tipi;      // Conta quanti tipi 
@@ -79,10 +82,10 @@ typedef struct {
 
 
 //gestione della lista di tipi validi
-ListaTipi* crea_lista_tipi();           // Crea una lista vuota
-void aggiungi_tipo(ListaTipi *lista, char *tipo);  // Aggiunge un tipo
-int tipo_esiste(ListaTipi *lista, char *tipo);     // Controlla se un tipo esiste già (flag 1 o 0)
-void libera_lista_tipi(ListaTipi *lista);          // Libera la memoria
+ListaTipi* crea_lista_tipi();           // Crea una lista vuota  (per ogni tipo nuovo chiamo questa funzione)
+void aggiungi_tipo(ListaTipi *lista, char *tipo);  // Aggiunge un tipo alla lista 
+int tipo_esiste(ListaTipi *lista, char *tipo);     // Controlla se un tipo esiste già (flag 1 o 0) tramite ricerca volendo binaria
+void libera_lista_tipi(ListaTipi *lista);          // Libera la memoria con free
 
 
 //--------------------------------------------//

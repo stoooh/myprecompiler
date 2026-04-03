@@ -61,9 +61,49 @@ Variabili read_file(char *filename, int *num_vars, Statistiche *stats){
     //leggiamo il file riga per riga, e analizziamo le variabili (CHE SONO ALL'INIZIO PER SEMPLICITA')
     char line[256]; //buffer per leggere le righe fino a 256 caratteri
 
+    //flag per capire se siamo dentro un commento multilinea
+    int in_m_comment = 0;
+
     while (fgets(line, sizeof(line), file) != NULL) { //fgets legge una riga dal file e la mette in line
-        //analizza la riga per trovare variabili, tipi, nomi, etc.
+        //analizza la riga per trovare variabili, tipi, nomi e togliamo i commenti
         //se trovi una variabile, incrementa stats->variabili_totali
         //se trovi un errore, incrementa stats->errori_totali
+
+        //tolgo i commenti (sia // che /* */) tramite un ciclo 
+        for(int i = 0; line[i] != '\0'; i++){
+            
+            if(in_m_comment == 0){  //siamo fuori dal commento multilinea
+
+                if(line[i] == '/' && line[i + 1] == '/'){  //commento singolo
+                    line[i] = '\0';  //tronco tutto sulla riga
+                }
+
+                else if(line[i] == '/' && line[i + 1] == '*'){  //trovo l'inizio del commento multiriga
+                in_m_comment = 1; //flag a 1
+                line[i] = ' ';
+                line[i + 1] = ' ';
+                i++; //salto perche ho gia lavorato su *
+
+            } else {
+
+                if (line[i] == '*' && line[i+1] == '/') { //fine del commento multiriga
+                in_commento = 0; // flag a 0
+                line[i] = ' ';   
+                line[i+1] = ' '; 
+                i++;             //salto il carattere successivo
+                } else {
+
+                    line[i] = ' '; //sostituisco tutto con spazi finche sono dentro il commento
+
+                }
+
+            }
+        }
+        
+        const char *delimiters = " \t\n;(){}[]*=+-/!&|<>,\"'"; 
+        char *token = strtok(line, delimiters); //strtok divide la stringa in parole usando i delimitatori
+
+        
+
     }
 }
