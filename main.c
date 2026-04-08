@@ -6,10 +6,10 @@
 
 int main(int argc, char *argv[]){  //args è il numero di argomenti, e argv l'array
 
-    Parametri *par; 
+    Parameters *par; 
     Variabile *var;
-    Statistiche stats;
-    int num_variabili;
+    Statistics stats;
+    int num_vars;
 
 //partiamo gestendo prima l'input dell'utente da terminale (-i, -o, -v)
 
@@ -23,15 +23,15 @@ int main(int argc, char *argv[]){  //args è il numero di argomenti, e argv l'ar
     }
 
     //inizializziamo le statistiche a zero nello stack
-    stats.variabili_totali = 0;
-    stats.errori_totali = 0;
-    stats.variabili_non_utilizzate = 0;
-    stats.nomi_non_corretti = 0;
-    stats.tipi_non_corretti = 0;
+    stats.tot_vars = 0;
+    stats.tot_errors = 0;
+    stats.vars_not_used = 0;
+    stats.names_not_ok = 0;
+    stats.types_not_ok = 0;
 
     //lettura file C
 
-    var = read_file(par->file_input, &num_variabili, &stats); //legge il file
+    var = read_file(par->file_input, &num_vars, &stats); //legge il file
 
     //caso base
     if(var == NULL){
@@ -39,11 +39,11 @@ int main(int argc, char *argv[]){  //args è il numero di argomenti, e argv l'ar
         return 1;
     }
 
-    calculate_stats(var, num_variabili, &stats);
+    calculate_stats(var, num_vars, &stats);
 
-    print_result(&stats, var, num_variabili, par);
+    print_result(&stats, var, num_vars, par);
 
-    free_memory(var, num_variabili, par);
+    free_memory(var, num_vars, par);
 
     //se tutto va bene ritorniamo 0
     return 0;
