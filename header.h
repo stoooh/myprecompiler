@@ -15,7 +15,7 @@ Il programma prevede tre parametri di input
 #include <stdlib.h>  //per funzioni di allocazione dinamica, gestione file, ecc.
 #include <string.h> //per funzioni di manipolazione stringhe, come strcmp, strcpy, ecc.
 #include <stdio.h> //per funzioni di input/output, come printf, fprintf, ecc.
-
+#include <ctype.h> // per isalpha e isalnum
 #define ERR_INVALID_NAME 1
 #define ERR_INVALID_TYPE 2
 #define ERR_UNUSED_VAR 3
@@ -83,18 +83,27 @@ void freeListType(ListType *list);          // Libera la memoria con free
 //argv legge gli argomenti passati da terminale (array di stringhe)
 Parameters* parsing_parameters(int argc, char *argv[]);
 
+// 4. Lettura e analisi del file di input
+// Carica tutte le variabili trovate in un array
+// Ritorna l'array di Variabile e il numero totale in *num_vars
+Variabile* read_file(char *filename, int *num_vars, Statistics *stats, ListType *custom_types);
+
 // 2. Validazione del nome di una variabile
 // Ritorna 1 se valido, 0 se non valido
 int is_valid_name(char *name);
 
-// 3. Validazione del tipo di una variabile
+// 3. Validazione del tipo di una variabile /typedef/
 // Ritorna 1 se valido, 0 se non valido
-int is_valid_type(char *type);
+int is_valid_type(char *type, ListType *custom_types);
 
-// 4. Lettura e analisi del file di input
-// Carica tutte le variabili trovate in un array
-// Ritorna l'array di Variabile e il numero totale in *num_vars
-Variabile* read_file(char *filename, int *num_vars, Statistics *stats);
+// Rimozione dei commenti dalla riga letta
+void rmv_comments(char *line, int *in_m_comment);
+
+// Riconosce se stiamo entrando nel corpo del codice
+int is_start_of_code(char *token, Variabile *array_vars, int num_vars);
+
+// Analizza la singola riga di codice
+void analyze_line(char *line, int current_line, Variabile **array_vars_ptr, int *num_vars, int *capacity_array, Statistics *stats, int *reading_declarations, ListType *custom_types);
 
 // 5. Calcolo delle statistiche finali
 // Aggiorna la struct Statistiche con i risultati

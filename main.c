@@ -29,13 +29,16 @@ int main(int argc, char *argv[]){  //args è il numero di argomenti, e argv l'ar
     stats.names_not_ok = 0;
     stats.types_not_ok = 0;
 
+    ListType *custom_types = create_ListType();
+
     //lettura file C
 
-    var = read_file(par->file_input, &num_vars, &stats); //legge il file
+    var = read_file(par->file_input, &num_vars, &stats, custom_types);
 
     //caso base
     if(var == NULL){
         fprintf(stderr, "ERRORE, file impossibile leggere il file '%s'\n", par -> file_input);
+        freeListType(custom_types);
         return 1;
     }
 
@@ -44,6 +47,8 @@ int main(int argc, char *argv[]){  //args è il numero di argomenti, e argv l'ar
     print_result(&stats, var, num_vars, par);
 
     free_memory(var, num_vars, par);
+    
+    freeListType(custom_types);
 
     //se tutto va bene ritorniamo 0
     return 0;
