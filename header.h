@@ -16,9 +16,6 @@ Il programma prevede tre parametri di input
 #include <string.h> //per funzioni di manipolazione stringhe, come strcmp, strcpy, ecc.
 #include <stdio.h> //per funzioni di input/output, come printf, fprintf, ecc.
 #include <ctype.h> // per isalpha e isalnum
-#define ERR_INVALID_NAME 1
-#define ERR_INVALID_TYPE 2
-#define ERR_UNUSED_VAR 3
 
 // Struttura dati per rappresentare un errore
 typedef struct {
@@ -90,7 +87,7 @@ Variabile* read_file(char *filename, int *num_vars, Statistics *stats, ListType 
 
 // 2. Validazione del nome di una variabile
 // Ritorna 1 se valido, 0 se non valido
-int is_valid_name(char *name);
+int is_valid_name(char *name, ListType *custom_types);
 
 // 3. Validazione del tipo di una variabile /typedef/
 // Ritorna 1 se valido, 0 se non valido
