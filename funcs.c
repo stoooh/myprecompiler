@@ -2,9 +2,13 @@
 
 #include "header.h"
 
+// Parsing dei parametri da linea di comando (-i, -o, -v)
+// Ritorna una struct Parametri riempita con i valori passati
+// argv legge gli argomenti passati da terminale (array di stringhe)
 Parameters *parsing_parameters(int argc, char *argv[]) {
 
-  Parameters *par = malloc(sizeof(Parameters)); // memoria dinamica
+  // memoria dinamica per gestire i comandi nel terminale
+  Parameters *par = malloc(sizeof(Parameters));
 
   // caso base
   if (par == NULL) {
@@ -12,10 +16,10 @@ Parameters *parsing_parameters(int argc, char *argv[]) {
     return NULL;
   }
 
-  par->file_input = NULL; // puntatore a stringa, inizialmente NULL se non viene
-                          // passato da terminale
-  par->file_output = NULL;
-  par->verbose = 0; // flag per output dettagliato
+  par->file_input = NULL; // puntatore a stringa del file input da analizzare
+  par->file_output =
+      NULL; // puntatore a stringa del file output dove salvare le statistiche
+  par->verbose = 0; // flag per output dettagliato (0 o 1)
 
   for (int i = 1; i < argc;
        i++) { // argc è la lunghezza totale degli argomenti passati da terminale
@@ -76,12 +80,8 @@ Parameters *parsing_parameters(int argc, char *argv[]) {
               // flag verbose
 }
 
-// GESTIONE DELLA LISTA DI TIPI VALIDI, USATA PER VALIDARE I TIPI NELLE
-// DICHIARAZIONI, INCLUSI I TYPEDEF PERSONALIZZATI
-//-----------------------------------------------------------//
-
-ListType *create_ListType() // crea una lista vuota
-{
+// crea una lista vuota
+ListType *create_ListType() {
   ListType *list = malloc(sizeof(ListType));
   if (list) {
     list->head = NULL; // inizializza la testa a NULL
@@ -111,50 +111,46 @@ void add_type(ListType *list,
   list->num_types++;
 }
 
-int flag_type_exists(
-    ListType *list,
-    char *type) // flag per controllare se un tipo esiste già nella lista,
-                // ritorna 1 se esiste, 0 altrimenti
-{
+// flag per controllare se un tipo esiste già nella lista
+int flag_type_exists(ListType *list, char *type) {
   if (!list || !type)
     return 0; // se la lista o il tipo sono NULL, il tipo non esiste
 
   NodeType *current =
       list->head; // partiamo dalla testa della lista e iteriamo fino alla fine
-  while (current != NULL) {
+  while (current != NULL) { // finchè non arriviamo alla fine della lista
     if (strcmp(current->types, type) ==
         0) // se troviamo il tipo nella lista, ritorniamo 1
       return 1;
     current = current->next; // altrimenti, passiamo al nodo successivo
   }
-  return 0;
+  return 0; // se non troviamo il tipo nella lista, ritorniamo 0
 }
 
-void freeListType(ListType *list) // libera la memoria allocata per la lista
-{
+// libera la memoria allocata per la lista
+void freeListType(ListType *list) {
   if (!list)
     return; // se la lista non esiste, non facciamo nulla
   NodeType *current =
       list->head; // iteriamo su tutti i nodi della lista, liberando la memoria
                   // allocata per ogni nodo e per la stringa del tipo
   while (current != NULL) {
-    NodeType *temp = current;
-    current = current->next;
-    free(temp->types);
-    free(temp);
+    NodeType *temp = current; // creo un nodo temporaneo per liberare la memoria
+                              // del nodo corrente
+    current = current->next;  // passo al nodo successivo
+    free(temp->types);        // libero la memoria del tipo
+    free(temp);               // libero la memoria del nodo
   }
-  free(list);
+  free(list); // libero la memoria della lista
 }
-
-//------------------------------------------------------------//
 
 // passiamo a rmv_comments la riga da pulire e un puntatore a un flag che indica
 // se siamo dentro un commento multiriga o no, così possiamo gestire
 // correttamente i commenti che si estendono su più linee
 void rmv_comments(char *line, int *in_m_comment) {
 
-  for (int i = 0; line[i] != '\0'; i++) // iteriamo finché non arriviamo alla
-                                        // fine della stringa (carattere null)
+  for (int i = 0; line[i] != '\0';
+       i++) // iteriamo finché non arriviamo alla fine della stringa
   {
 
     if (*in_m_comment == 0) { // fuori dal commento multiriga
@@ -179,7 +175,7 @@ void rmv_comments(char *line, int *in_m_comment) {
         line[i + 1] = ' ';
         i++;   // salto lo slash
       } else { // se ancora non ho trovato la fine del commento, continuo a
-               // pulire la riga
+        // pulire la riga
         line[i] =
             ' '; // pulisco con uno spazio vuoto i caratteri dentro il commento
       }
@@ -188,28 +184,27 @@ void rmv_comments(char *line, int *in_m_comment) {
 }
 
 // funzione per riconoscere se un nome di una variabile è valido
-
-// MIGLIORARE PER I TIPI COMPOSTI TIPO LONG LONG INT, CHE SONO TIPI VALIDI MA
-// NON SONO RICONOSCIUTI COME TIPI STANDARD, QUINDI POTREBBERO ESSERE
-// RICONOSCIUTI COME NOMI VALIDI, QUINDI DOVREMMO FARE UN CONTROLLO PIU'
-// APPROFONDITO PER RICONOSCERE QUESTI CASI
-
 int is_valid_name(char *name, ListType *custom_types) {
-  if (!name || strlen(name) == 0)
+
+  if (!name || strlen(name) == 0) // se il nome è NULL o vuoto, non è valido
     return 0;
 
-  // Se la parola è un tipo valido (es. "int", "float"), NON è un nome valido!
-  if (is_valid_type(name, custom_types))
+  if (is_valid_type(name,
+                    custom_types)) // se la parola è un tipo valido (es. "int",
+                                   // "float"), NON è un nome valido!
     return 0;
 
-  if (!isalpha(name[0]) && name[0] != '_')
+  if (!isalpha(name[0]) &&
+      name[0] !=
+          '_') // il primo carattere deve essere una lettera o un underscore
     return 0;
 
-  for (int i = 1; name[i] != '\0'; i++) {
+  for (int i = 1; name[i] != '\0';
+       i++) { // resto dei caratteri deve essere alfanumerico o un underscore
     if (!isalnum(name[i]) && name[i] != '_')
       return 0;
   }
-  return 1;
+  return 1; // se tutti i controlli sono passati, il nome è valido
 }
 
 // funzione per riconoscere se un tipo è valido, sia standard che personalizzato
@@ -221,6 +216,7 @@ int is_valid_type(char *type, ListType *custom_types) {
   const char *standard_types[] = {
       "int",      "float",  "double", "char", "void",  "short", "long",
       "unsigned", "signed", "struct", "enum", "union", "FILE"};
+
   int num_std = sizeof(standard_types) /
                 sizeof(standard_types[0]); // numero di tipi nell'array per
                                            // iterere correttamente
@@ -245,6 +241,7 @@ int is_start_of_code(char *token, Variabile *array_vars, int num_vars) {
 
   const char *keywords[] = {"if",     "for",    "while", "do",   "switch",
                             "return", "printf", "scanf", "else", "main"};
+
   int num_keywords = sizeof(keywords) /
                      sizeof(keywords[0]); // Numero di parole chiave nell'array
                                           // per iterare correttamente
@@ -263,7 +260,8 @@ int is_start_of_code(char *token, Variabile *array_vars, int num_vars) {
       return 1;
   }
 
-  return 0;
+  return 0; // se non è una parola chiave né il nome di una variabile, non è
+            // l'inizio del codice
 }
 
 // funzione che aggiunge spazi intorno a = ; , per facilitare la tokenizzazione,
@@ -289,24 +287,30 @@ void cleaned_line(char *line) {
   strcpy(line, temp_buffer); // copia le modifiche nella stringa originale
 }
 
+// funzione per memorizzare i numeri di riga in cui ci sono errori (dinamica)
 void add_error_line(Statistics *stats, int line) {
   if (stats->error_lines_count >= stats->error_lines_capacity) {
-    stats->error_lines_capacity *= 2;
+    stats->error_lines_capacity *=
+        2; // se serve riallocare raddoppio la capacità
     int *temp =
-        realloc(stats->error_lines, stats->error_lines_capacity * sizeof(int));
+        realloc(stats->error_lines,
+                stats->error_lines_capacity *
+                    sizeof(int)); // alloco memoria per il nuovo array di errori
     if (temp)
       stats->error_lines = temp;
   }
-  stats->error_lines[stats->error_lines_count++] = line;
+  stats->error_lines[stats->error_lines_count++] =
+      line; // aggiungo il numero di riga se c'è un errore
+            // incrementando il contatore di errori
 }
 
-// funzione che analizza riga per riga e ritorna le variabili trovate,
-// aggiornando le statistiche e gestendo il blocco dichiarazioni e il blocco
-// codice eseguibile
+// funzione principale che analizza riga per riga e ritorna le variabili
+// trovate, aggiornando le statistiche e gestendo il blocco dichiarazioni e il
+// blocco codice eseguibile
 void analyze_line(char *line, int current_line, Variabile **array_vars_ptr,
                   int *num_vars, int *capacity_array, Statistics *stats,
                   int *reading_declarations, ListType *custom_types,
-                  ParserState *p_state) {
+                  Analyser *analyser) {
 
   Variabile *array_vars =
       *array_vars_ptr; // otteniamo il puntatore all'array di variabili per
@@ -333,8 +337,8 @@ void analyze_line(char *line, int current_line, Variabile **array_vars_ptr,
       is_start_of_code(
           token, array_vars,
           *num_vars)) { // se siamo ancora nel blocco dichiarazioni e troviamo
-                        // un token che indica l'inizio del codice eseguibile,
-                        // usciamo dal blocco dichiarazioni
+    // un token che indica l'inizio del codice eseguibile,
+    // usciamo dal blocco dichiarazioni
     *reading_declarations = 0;
   }
 
@@ -364,13 +368,15 @@ void analyze_line(char *line, int current_line, Variabile **array_vars_ptr,
     return; // usciamo
   }
 
-  //---------------------------------------------// BLOCCO DICHIARAZIONI,
-  //CERCHIAMO VARIABILI DICHIARATE
+  // BLOCCO DICHIARAZIONI, CERCHIAMO VARIABILI DICHIARATE
+  //---------------------------------------------//
 
-#define in_declaration (p_state->in_declaration)
-#define in_assegnment (p_state->in_assegnment)
-#define is_typedef (p_state->is_typedef)
-  char *type_found = p_state->type_found;
+#define in_declaration                                                         \
+  (analyser->in_declaration) // uso di un #define per evitare di scrivere
+                             // analyser-> ogni volta
+#define in_assegnment (analyser->in_assegnment) // idem
+#define is_typedef (analyser->is_typedef)       // idem
+  char *type_found = analyser->type_found;      // idem ma con puntatore
 
   while (token != NULL) {
     // gestione dei simboli isolati = ; ,
@@ -391,7 +397,10 @@ void analyze_line(char *line, int current_line, Variabile **array_vars_ptr,
       token = strtok(NULL, delimiters);
       continue;
     }
+
     // Analisi della parola
+    //-----------------------------------------------//
+
     if (strcmp(token, "typedef") == 0) // flag typedef
     {
       is_typedef = 1;
@@ -403,9 +412,10 @@ void analyze_line(char *line, int current_line, Variabile **array_vars_ptr,
         in_declaration = 1;        // settiamo che siamo in dichiarazione
         strcpy(type_found, token); // salviamo il tipo trovato per associarlo
                                    // alle variabili che dichiareremo dopo
+
       } else { // altrimenti non è un tipo valido, quindi è un errore,
-               // incrementiamo le statistiche e saltiamo tutti i token fino al
-               // prossimo ;
+        // incrementiamo le statistiche e saltiamo tutti i token fino al
+        // prossimo ;
         stats->tot_errors++;
         stats->types_not_ok++;
         add_error_line(stats, current_line);
@@ -416,7 +426,8 @@ void analyze_line(char *line, int current_line, Variabile **array_vars_ptr,
       }
     } else if (in_declaration == 1 &&
                in_assegnment ==
-                   0) // se siamo in dichiarazione e non in assegnazione
+                   0) // se siamo in dichiarazione e NON in assegnazione,
+                      // es. int x,y,z (qui in_assegnment è 0)
     {
       if (is_typedef == 1) // se stiamo dichiarando un typedef
       {
@@ -426,16 +437,21 @@ void analyze_line(char *line, int current_line, Variabile **array_vars_ptr,
           add_type(custom_types, token);
       } else {
 
-        if (isdigit(token[0])) {
-          // Se è solo un numero puro, ignoralo
-          int is_pure_number = 1;
-          for (int k = 1; token[k] != '\0'; k++) {
-            if (!isdigit(token[k]) && token[k] != '.' && token[k] != 'f') {
-              is_pure_number = 0;
+        if (isdigit(token[0])) { // il primo carattere del token è un numero ->
+                                 // controlliamo se è un numero puro
+          int is_pure_number =
+              1; // flag a 1 se il token è composto solo da numeri
+          for (int k = 1; token[k] != '\0';
+               k++) { // controlliamo i caratteri successivi
+            if (!isdigit(token[k]) && token[k] != '.' &&
+                token[k] !=
+                    'f') {        // se non è un numero, punto o 'f' (es. 3.14f)
+              is_pure_number = 0; // flag a 0
               break;
             }
           }
-          if (is_pure_number) {
+          if (is_pure_number) { // se è un numero puro, ignoralo e passa al
+                                // prossimo token
             token = strtok(NULL, delimiters);
             continue;
           }
@@ -461,38 +477,49 @@ void analyze_line(char *line, int current_line, Variabile **array_vars_ptr,
 
           // Array dinamico per le variabili
           if (*num_vars >= *capacity_array) {
-            *capacity_array *= 2;
-            Variabile *temp_array =
-                realloc(array_vars, (*capacity_array) * sizeof(Variabile));
-            if (temp_array == NULL) {
+            *capacity_array *= 2; // raddoppiamo la capacità
+            Variabile *temp_array = realloc(
+                array_vars, (*capacity_array) *
+                                sizeof(Variabile)); // riallochiamo la memoria
+            if (temp_array == NULL) { // se la memoria non è stata allocata
               fprintf(stderr,
                       "Errore di allocazione memoria: realloc fallito!\n");
               return; // Esci evitando di impostare array_vars a NULL
             }
-            array_vars = temp_array;
-            *array_vars_ptr = array_vars;
+            array_vars = temp_array; //"travasiamo" gli oggetti di array_vars in
+                                     // temp_array (liberiamo memoria)
+            *array_vars_ptr =
+                array_vars; // usiamo array_vars puntato da array_vars_ptr per
+                            // non perdere l'array allocato
           }
 
-          array_vars[*num_vars].name = strdup(token);
-          array_vars[*num_vars].type = strdup(type_found);
-          array_vars[*num_vars].line = current_line;
-          array_vars[*num_vars].used = 0;
-          (*num_vars)++;
-        } else {
-          stats->tot_errors++;
-          stats->names_not_ok++;
-          add_error_line(stats, current_line);
+          array_vars[*num_vars].name = strdup(
+              token); // copiamo il token (allocazione dinamica con strdup)
+          array_vars[*num_vars].type = strdup(
+              type_found); // copiamo il tipo (allocazione dinamica con strdup)
+          array_vars[*num_vars].line = current_line; // salviamo la riga
+          array_vars[*num_vars].used = 0; // inizializziamo il flag a 0
+          (*num_vars)++; // incrementiamo il numero di variabili trovate
+
+        } else { // altrimenti non è un nome valido
+
+          stats->tot_errors++;   // incrementiamo il numero totale di errori
+          stats->names_not_ok++; // incrementiamo il numero di nomi di variabili
+                                 // non corretti
+          add_error_line(stats, current_line); // aggiungiamo la riga agli
+                                               // errori
         }
       }
     }
-    token = strtok(NULL, delimiters);
+    token = strtok(NULL, delimiters); // passiamo al prossimo token
   }
 
-#undef in_declaration
+#undef in_declaration // liberiamo i define
 #undef in_assegnment
 #undef is_typedef
 }
 
+// funzione che legge il file e restituisce un array di variabili
 Variabile *read_file(char *filename, int *num_vars, Statistics *stats,
                      ListType *custom_types) {
   FILE *file = fopen(filename, "r"); // apriamo il file in lettura
@@ -509,7 +536,7 @@ Variabile *read_file(char *filename, int *num_vars, Statistics *stats,
     fclose(file);
     return NULL;
   }
-  rewind(file);
+  rewind(file); // riporta il puntatore del file all'inizio
 
   // array dinamico per salvare le variabili (token) trovati
   int capacity_array = 20; // verrà espanso dinamicamente se necessario,
@@ -519,19 +546,20 @@ Variabile *read_file(char *filename, int *num_vars, Statistics *stats,
   *num_vars = 0;        // contatore di variabili trovate, inizialmente 0
   int current_line = 0; // per salvare dove si trova la variabile o l'errore
 
-  char line[256];
+  char line[256]; // array di caratteri per memorizzare la riga letta dal file
   int in_m_comment =
       0; // flag per capire se siamo dentro un commento multilinea
 
   int reading_declarations =
-      1; // siamo nel blocco dichiarazioni (assunzione che tutte le
-         // dichiarazioni siano all'inizio del file, prima di qualsiasi codice
-         // eseguibile)
+      1; // siamo nel blocco dichiarazioni (assunzione che tutte
+         // le dichiarazioni siano all'inizio del file,
+         // prima di qualsiasi codice eseguibile)
 
-  ParserState p_state = {
-      0, 0, "", 0}; // Mette a zero lo stato del parser lexicale persistente per
-                    // poter varcare i confini della riga
+  Analyser analyser = {0, 0, "",
+                       0}; // Mette a zero lo stato del parser lexicale
+                           // persistente per poter varcare i confini della riga
 
+  // cicliamo per ogni riga del file IMPORTANTE**
   while (fgets(line, sizeof(line), file) != NULL) {
     current_line++; // Incrementa il contatore di linee per l'errore
 
@@ -541,38 +569,43 @@ Variabile *read_file(char *filename, int *num_vars, Statistics *stats,
     // passiamo &array_vars (puntatore a puntatore) e &capacity_array
     analyze_line(line, current_line, &array_vars, num_vars, &capacity_array,
                  stats, &reading_declarations, custom_types,
-                 &p_state); // analizza la riga e aggiorna l'array di variabili
-                            // e le statistiche
+                 &analyser); // analizza la riga e aggiorna l'array di variabili
+                             // e le statistiche
   }
 
   // Errore di lettura file (corrotto o problemi I/O)
-  if (ferror(file)) {
+  if (ferror(file)) { // controlla se c'è stato un errore durante la lettura
     fprintf(stderr,
             "Errore: si è verificato un errore durante la lettura del file!\n");
   }
 
-  if (fclose(file) == EOF) {
+  if (fclose(file) ==
+      EOF) { // chiude il file e verifica che la chiusura sia andata a buon fine
     fprintf(stderr, "Errore durante la chiusura del file!\n");
   }
+
   return array_vars; // Ritorniamo il puntatore all'array di variabili trovate
 }
 
+// calcolo statistice di variabili non usate e totale errori
 void calculate_stats(Variabile *vars, int num_vars, Statistics *stats) {
   for (int i = 0; i < num_vars; i++) {
-    if (vars[i].used == 0) {
-      stats->vars_not_used++;
-      stats->tot_errors++;
-      add_error_line(stats, vars[i].line);
+    if (vars[i].used == 0) {  // se la variabile non è usata
+      stats->vars_not_used++; // incrementa il contatore di variabili non usate
+      stats->tot_errors++;    // incrementa il contatore di errori totali
+      add_error_line(stats, vars[i].line); // aggiunge la riga agli errori
     }
   }
 }
 
+// funzione che stampa i risultati
 void print_result(Statistics *stats, Variabile *vars, int num_vars,
                   Parameters *param) {
 
   if (param->file_output != NULL) {
-    FILE *file_out = fopen(param->file_output, "w");
-    if (file_out) {
+    FILE *file_out =
+        fopen(param->file_output, "w"); // apre il file in scrittura
+    if (file_out) { // se il file è stato aperto con successo
       fprintf(file_out, "=== RESOCONTO ANALISI ===\n");
       fprintf(file_out, "Variabili trovate: %d\n", stats->tot_vars);
       fprintf(file_out, "Errori totali: %d\n", stats->tot_errors);
@@ -581,20 +614,21 @@ void print_result(Statistics *stats, Variabile *vars, int num_vars,
       fprintf(file_out, " - Variabili non usate: %d\n", stats->vars_not_used);
       fprintf(file_out, "=========================\n");
 
-      fprintf(file_out, "\n[TRACCIA] --- CRONOLOGIA ERRORI ---\n");
-      for (int e = 0; e < stats->error_lines_count; e++) {
+      fprintf(file_out, "\n--- CRONOLOGIA ERRORI ---\n");
+      for (int e = 0; e < stats->error_lines_count;
+           e++) { // scorre tutte le righe con errori
         fprintf(file_out, "Rilevato errore alla RIGA %d nel file.\n",
                 stats->error_lines[e]);
       }
-      fprintf(file_out, "\n[TRACCIA] --- VARIABILI NON USATE ---\n");
-      for (int i = 0; i < num_vars; i++) {
+      fprintf(file_out, "\n--- VARIABILI NON USATE ---\n");
+      for (int i = 0; i < num_vars; i++) { // scorre tutte le variabili
         if (vars[i].used == 0)
           fprintf(file_out, "Nome: %s\n", vars[i].name);
       }
 
       // Se nel file vogliamo anche i dettagli, stampiamoli
       fprintf(file_out, "\n--- DETTAGLIO GENERALE VARIABILI ---\n");
-      for (int i = 0; i < num_vars; i++) {
+      for (int i = 0; i < num_vars; i++) { // scorre tutte le variabili
         fprintf(
             file_out,
             "Riga %d      | Tipo: %-10s      | Nome: %-15s      | Stato: %s\n",
@@ -620,7 +654,9 @@ void print_result(Statistics *stats, Variabile *vars, int num_vars,
     }
   }
 
-  if (param->verbose == 1 || param->file_output == NULL) {
+  if (param->verbose == 1 ||
+      param->file_output ==
+          NULL) { // se verbose è 1 o file_output è NULL, stampa su terminale
     printf("\n=== RESOCONTO ANALISI ===\n");
     printf("Variabili trovate: %d\n", stats->tot_vars);
     printf("Errori totali: %d\n", stats->tot_errors);
@@ -629,12 +665,13 @@ void print_result(Statistics *stats, Variabile *vars, int num_vars,
     printf(" - Variabili non usate: %d\n", stats->vars_not_used);
     printf("=========================\n");
 
-    printf("\n[TRACCIA] --- CRONOLOGIA ERRORI ---\n");
-    for (int e = 0; e < stats->error_lines_count; e++) {
+    printf("\n--- CRONOLOGIA ERRORI ---\n");
+    for (int e = 0; e < stats->error_lines_count;
+         e++) { // scorre tutte le righe con errori
       printf("Rilevato errore alla RIGA %d nel file.\n", stats->error_lines[e]);
     }
-    printf("\n[TRACCIA] --- VARIABILI NON USATE ---\n");
-    for (int i = 0; i < num_vars; i++) {
+    printf("\n--- VARIABILI NON USATE ---\n");
+    for (int i = 0; i < num_vars; i++) { // scorre tutte le variabili
       if (vars[i].used == 0)
         printf("Nome: %s\n", vars[i].name);
     }
@@ -651,6 +688,7 @@ void print_result(Statistics *stats, Variabile *vars, int num_vars,
   }
 }
 
+// funzione che libera la memoria
 void free_memory(Variabile *vars, int num_vars, Parameters *param) {
   for (int i = 0; i < num_vars;
        i++) // liberiamo dalla memoria dinamica i nomi e i tipi delle variabili

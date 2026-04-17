@@ -19,20 +19,12 @@ trattino) per visualizzare sullo stdout le statistiche di elaborazione
 #include <stdlib.h> //per funzioni di allocazione dinamica, gestione file, ecc.
 #include <string.h> //per funzioni di manipolazione stringhe, come strcmp, strcpy, ecc.
 
-// Struttura dati per rappresentare un errore
-typedef struct {
-  int type_error; // tipo di errore (es. nome non valido, tipo non valido,
-                  // variabile non utilizzata)
-  int num_line;
-} Error;
-
 // Struttura dati per rappresentare una variabile
 typedef struct {
   char *name;     // nome della variabile
   char *type;     // tipo della variabile (es. int, float, ecc.)
   int line;       // riga in cui è stata dichiarata
   int used;       // flag con 1 o 0 se usata o no
-  Error *errors;  // Array dinamico di errori
   int num_errors; // contatore di errori
 } Variabile;
 
@@ -42,15 +34,18 @@ typedef struct {
   int verbose;       // flag per output dettagliato (0 o 1)
 } Parameters;
 
-// Struttura di stato del parser lexicale persistente
+// Struttura di stato dell'analizzatore
 typedef struct {
-  int in_declaration;
-  int in_assegnment;
-  char type_found[30];
-  int is_typedef;
-} ParserState;
+  int in_declaration;  // flag per segnare l'inizio di una dichiarazione di una
+                       // variabile int, char
+  int in_assegnment;   // flag per segnare l'inizio di un assegnamento di una
+                       // variabile (es. =)
+  char type_found[30]; // tipo trovato e salvo qui le variabili temporaneamente
+                       // (int a,b,c...)
+  int is_typedef;      // flag per segnare l'inizio di un typedef
+} Analyser;
 
-// Struttura dati per memorizzare le statistiche
+// Struttura dati per memorizzare le statistiche per gli errori
 typedef struct {
   int tot_vars;      // Numero totale di variabili controllate
   int tot_errors;    // Numero totale di errori rilevati
@@ -58,10 +53,10 @@ typedef struct {
   int names_not_ok;  // Numero di nomi di variabili non corretti
   int types_not_ok;  // Numero di tipi di dato non corretti
 
-  // Per Traccia: memorizzare la riga esatta degli errori
-  int *error_lines;
-  int error_lines_count;
-  int error_lines_capacity;
+  // memorizza la riga esatta degli errori
+  int *error_lines;         // array dinamico di righe d'errore
+  int error_lines_count;    // numero di righe con errori
+  int error_lines_capacity; // capacita' iniziale che si raddoppia dinamicamente
 } Statistics;
 
 //-------------------------------------------//
@@ -91,22 +86,22 @@ void freeListType(ListType *list); // Libera la memoria con free
 
 //--------------------------------------------//
 
-// 1. Parsing dei parametri da linea di comando (-i, -o, -v)
+// Parsing dei parametri da linea di comando (-i, -o, -v)
 // Ritorna una struct Parametri riempita con i valori passati
 // argv legge gli argomenti passati da terminale (array di stringhe)
 Parameters *parsing_parameters(int argc, char *argv[]);
 
-// 4. Lettura e analisi del file di input
+// Lettura e analisi del file di input
 // Carica tutte le variabili trovate in un array
 // Ritorna l'array di Variabile e il numero totale in *num_vars
 Variabile *read_file(char *filename, int *num_vars, Statistics *stats,
                      ListType *custom_types);
 
-// 2. Validazione del nome di una variabile
+// Validazione del nome di una variabile
 // Ritorna 1 se valido, 0 se non valido
 int is_valid_name(char *name, ListType *custom_types);
 
-// 3. Validazione del tipo di una variabile /typedef/
+// Validazione del tipo di una variabile /typedef/
 // Ritorna 1 se valido, 0 se non valido
 int is_valid_type(char *type, ListType *custom_types);
 
@@ -120,17 +115,17 @@ int is_start_of_code(char *token, Variabile *array_vars, int num_vars);
 void analyze_line(char *line, int current_line, Variabile **array_vars_ptr,
                   int *num_vars, int *capacity_array, Statistics *stats,
                   int *reading_declarations, ListType *custom_types,
-                  ParserState *p_state);
+                  Analyser *analyser);
 
-// 5. Calcolo delle statistiche finali
+// Calcolo delle statistiche finali
 // Aggiorna la struct Statistiche con i risultati
 void calculate_stats(Variabile *vars, int num_vars, Statistics *stats);
 
-// 6. Stampa dei risultati (su file e/o stdout)
+// Stampa dei risultati (su file e/o stdout)
 void print_result(Statistics *stats, Variabile *vars, int num_vars,
                   Parameters *param);
 
-// 7. Liberazione memoria
+// Liberazione memoria
 void free_memory(Variabile *vars, int num_vars, Parameters *param);
 
 #endif

@@ -32,7 +32,10 @@ int main(int argc,
   stats.vars_not_used = 0;
   stats.names_not_ok = 0;
   stats.types_not_ok = 0;
-  stats.error_lines_capacity = 20;
+
+  // array dinamico di righe d'errore
+  stats.error_lines_capacity =
+      20; // capacita' iniziale che si raddoppia dinamicamente
   stats.error_lines = malloc(stats.error_lines_capacity * sizeof(int));
   stats.error_lines_count = 0;
 
